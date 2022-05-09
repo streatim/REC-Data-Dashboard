@@ -1,105 +1,25 @@
 google.charts.load("current", {packages:["corechart"]});
 google.charts.load('current', {packages: ['table']});
 let chartDataObject = new Object();
-function drawChart(array, divNum){
-    const type = array.ChartInfo.chartType;
-    if(type=="TableChart"){drawTableOptions(array, divNum);}
-    else if(type=="Download"){
-        if(document.getElementById('tsvCheck').innerHTML == ''){csvOptionsCreate();}
-        csvOptionsCreate(array, divNum);
-    }else{
-        const data = google.visualization.arrayToDataTable(array.Data); 
-        const options = array.ChartInfo.Options;
-        const divID = "chart"+divNum;
-        if(firstPreviewBox == ''){firstPreviewBox = divID;}
-        let actDiv = document.createElement("div"); // Create a <div> element
-        actDiv.classList.add('resultGraph');
-        actDiv.onclick = function(){drawMainBox(divID);};
-        actDiv.id = divID;
-        document.getElementById("chartDivs").appendChild(actDiv);
-        const divElement = document.getElementById(divID);
-        chartType(divElement, data, options, type);
-    }
-}
 
-function drawTableOptions(array, chartID){
-    let option = document.createElement("option");
-    option.id = chartID;
-    option.innerText = array.ChartInfo.Options.title;
-    document.getElementById('tableCheck').appendChild(option);
-}
+function addProgram(isAll = false){
+    const selectedList = document.getElementById('allPrograms');
+    //Put together the list of items to move.
+    const moveList = (isAll) ? selectedList.querySelectorAll('option') : selectedList.querySelectorAll('option:checked');
 
-function csvOptionsCreate(array, chartID){
-    let option = document.createElement("option");
-    option.id = (chartID) ? chartID : 'None';
-    if(chartID === 0){option.id = 0;}
-    option.innerText = (array) ? array.ChartInfo.Options.title : 'Select a Report to Download';
-    document.getElementById('tsvCheck').appendChild(option);
-}
-
-function downloadTSV(){
-    let optionTSV = document.getElementById('tsvCheck');
-    let chartID = optionTSV.options[optionTSV.selectedIndex].id;
-    if(chartID == "None"){return;}    
-    let confirm = window.confirm("Do you want to Download this Report?\n"+chartDataObject[chartID].ChartInfo.Options.title);
-    if(confirm === true){
-        let tsv='';
-        //Check to see if the .tsv includes a notice and, if so, make it the first line.
-        if(chartDataObject[chartID].ChartInfo.Options.notice){
-            tsv += '"'+chartDataObject[chartID].ChartInfo.Options.notice+"\"\n";
-        }
-        chartDataObject[chartID].Data.forEach(function(row){
-            tsv += '"';
-            tsv += row.join('"\t"');
-            tsv += "\"\n";
+    //Go through and get the information of each selected item, then remove it from the program list.
+    let addList = new Array();
+    for(i=0; i<moveList.length; i++){
+        let parentGroup = moveList[i].parentElement.label;
+        addList.push({
+            'Parent' : parentGroup,
+            'Value' : moveList[i].value,
+            'Text' : moveList[i].innerText
         });
-    
-        //Create a fake link and then "click" it, downloading the file.
-        //Create the Link to the Files.
-        let hiddenTSV = document.createElement('a');
-        hiddenTSV.href = 'data:text/tsv;charset=utf-8,' + encodeURI(tsv);
-        hiddenTSV.target = '_blank';
-        hiddenTSV.download = chartDataObject[chartID].ChartInfo.Options.title+'.tsv';
-        document.getElementById('tsvCheck').appendChild(hiddenTSV);
-        hiddenTSV.click();    
+        //Remove from the Add List.
+        selectedList.remove(moveList[i].index);
     }
-    document.getElementById('tsvCheck').selectedIndex = 0;
-}
-
-function drawTableBox(){
-    let optionTable = document.getElementById('tableCheck');
-    chartID = optionTable.options[optionTable.selectedIndex].id;
-    let table = document.getElementById('chartTable');
-    table.innerHTML = '';
-
-    //Create Rows
-    for(i=1;i<chartDataObject[chartID].Data.length;i++){
-        let row = table.insertRow();
-        for(p=0;p<chartDataObject[chartID].Data[i].length;p++){
-            let cell = row.insertCell();
-            cell.innerHTML = chartDataObject[chartID].Data[i][p];
-        }
-    }
-
-    //Create the Headers for the Table
-    let header = table.createTHead();
-    let headerRow = header.insertRow();
-    for(i=0;i<chartDataObject[chartID].Data[0].length;i++){
-        let cell = headerRow.insertCell();
-        cell.innerHTML = "<strong>"+chartDataObject[chartID].Data[0][i]+"</strong>";
-    }
-}
-
-function drawMainBox(chartID){
-    let selectedList = document.getElementsByClassName('selected');
-    for(i=0;i<selectedList.length;i++){selectedList[i].classList.remove('selected');}
-    document.getElementById(chartID).classList.add('selected');
-    const array = chartDataObject[chartID.replace('chart', '')];
-    const data = google.visualization.arrayToDataTable(array.Data); 
-    const options = array.ChartInfo.Options;
-    const type = array.ChartInfo.chartType;
-    const divElement = document.getElementById('mainBox');
-    chartType(divElement, data, options, type);    
+    console.log(addList);
 }
 
 function chartType(divElement, data, options, type) {
@@ -213,54 +133,12 @@ function clearHTML(id){
     }
 }
 
-function pickTime(){
-    clearHTML('dates');
-    //Get whichever value is selected.
-    let dateList = document.getElementsByName('reportBy');
-    let selected = '';
-    for(i=0;i<dateList.length;i++){
-        if(dateList[i].checked == true){
-            selected = dateList[i].id;
-        }
-    }
-    const newList = sortTypes[selected];
-    for(i=0;i<newList.length;i++){
-        let option = document.createElement('option');
-            option.id = newList[i].SemDate;
-            option.value = newList[i].SemDate;
-            option.innerHTML = newList[i].SemDate;
-            document.getElementById('dates').appendChild(option);
-    }
-}
-
-function setSemester(selectObject){
-    //Set variables.
-    const startEnd = selectObject.name;
-    const semesterID = startEnd+'Semester';
-    const year = selectObject.value;
-
-    //Sets the Semester based on the academic year provided.
-    const semesterList = document.getElementById(semesterID);
-
-    //Clear the original list.
-    clearHTML(semesterID);
-
-    for(i=0;i<dateInfo[year].length;i++){
-        let semesterArray = dateInfo[year][i];
-        let semesterOption = document.createElement('option');
-            semesterOption.id = startEnd+semesterArray.Semester;
-            semesterOption.value = semesterArray[startEnd];
-            semesterOption.innerText = semesterArray.Semester;
-            semesterList.appendChild(semesterOption);
-    }
-}
-
-function librarianToggle(){
-    const libList = document.getElementById('librarians');
-    libList.disabled = !libList.disabled;
-    for(i=0;i<libList.children.length;i++){
-        libList.children[i].selected = libList.disabled;
-    }
+function csvOptionsCreate(array, chartID){
+    let option = document.createElement("option");
+    option.id = (chartID) ? chartID : 'None';
+    if(chartID === 0){option.id = 0;}
+    option.innerText = (array) ? array.ChartInfo.Options.title : 'Select a Report to Download';
+    document.getElementById('tsvCheck').appendChild(option);
 }
 
 function dateValidate(){
@@ -269,6 +147,107 @@ function dateValidate(){
     const end = document.getElementById('endSemester');
     const endDate = new Date(end.value);
     return startDate<=endDate;
+}
+
+function downloadTSV(){
+    let optionTSV = document.getElementById('tsvCheck');
+    let chartID = optionTSV.options[optionTSV.selectedIndex].id;
+    if(chartID == "None"){return;}    
+    let confirm = window.confirm("Do you want to Download this Report?\n"+chartDataObject[chartID].ChartInfo.Options.title);
+    if(confirm === true){
+        let tsv='';
+        //Check to see if the .tsv includes a notice and, if so, make it the first line.
+        if(chartDataObject[chartID].ChartInfo.Options.notice){
+            tsv += '"'+chartDataObject[chartID].ChartInfo.Options.notice+"\"\n";
+        }
+        chartDataObject[chartID].Data.forEach(function(row){
+            tsv += '"';
+            tsv += row.join('"\t"');
+            tsv += "\"\n";
+        });
+    
+        //Create a fake link and then "click" it, downloading the file.
+        //Create the Link to the Files.
+        let hiddenTSV = document.createElement('a');
+        hiddenTSV.href = 'data:text/tsv;charset=utf-8,' + encodeURI(tsv);
+        hiddenTSV.target = '_blank';
+        hiddenTSV.download = chartDataObject[chartID].ChartInfo.Options.title+'.tsv';
+        document.getElementById('tsvCheck').appendChild(hiddenTSV);
+        hiddenTSV.click();    
+    }
+    document.getElementById('tsvCheck').selectedIndex = 0;
+}
+
+function drawChart(array, divNum){
+    const type = array.ChartInfo.chartType;
+    if(type=="TableChart"){drawTableOptions(array, divNum);}
+    else if(type=="Download"){
+        if(document.getElementById('tsvCheck').innerHTML == ''){csvOptionsCreate();}
+        csvOptionsCreate(array, divNum);
+    }else{
+        const data = google.visualization.arrayToDataTable(array.Data); 
+        const options = array.ChartInfo.Options;
+        const divID = "chart"+divNum;
+        if(firstPreviewBox == ''){firstPreviewBox = divID;}
+        let actDiv = document.createElement("div"); // Create a <div> element
+        actDiv.classList.add('resultGraph');
+        actDiv.onclick = function(){drawMainBox(divID);};
+        actDiv.id = divID;
+        document.getElementById("chartDivs").appendChild(actDiv);
+        const divElement = document.getElementById(divID);
+        chartType(divElement, data, options, type);
+    }
+}
+
+function drawMainBox(chartID){
+    let selectedList = document.getElementsByClassName('selected');
+    for(i=0;i<selectedList.length;i++){selectedList[i].classList.remove('selected');}
+    document.getElementById(chartID).classList.add('selected');
+    const array = chartDataObject[chartID.replace('chart', '')];
+    const data = google.visualization.arrayToDataTable(array.Data); 
+    const options = array.ChartInfo.Options;
+    const type = array.ChartInfo.chartType;
+    const divElement = document.getElementById('mainBox');
+    chartType(divElement, data, options, type);    
+}
+
+function drawTableBox(){
+    let optionTable = document.getElementById('tableCheck');
+    chartID = optionTable.options[optionTable.selectedIndex].id;
+    let table = document.getElementById('chartTable');
+    table.innerHTML = '';
+
+    //Create Rows
+    for(i=1;i<chartDataObject[chartID].Data.length;i++){
+        let row = table.insertRow();
+        for(p=0;p<chartDataObject[chartID].Data[i].length;p++){
+            let cell = row.insertCell();
+            cell.innerHTML = chartDataObject[chartID].Data[i][p];
+        }
+    }
+
+    //Create the Headers for the Table
+    let header = table.createTHead();
+    let headerRow = header.insertRow();
+    for(i=0;i<chartDataObject[chartID].Data[0].length;i++){
+        let cell = headerRow.insertCell();
+        cell.innerHTML = "<strong>"+chartDataObject[chartID].Data[0][i]+"</strong>";
+    }
+}
+
+function drawTableOptions(array, chartID){
+    let option = document.createElement("option");
+    option.id = chartID;
+    option.innerText = array.ChartInfo.Options.title;
+    document.getElementById('tableCheck').appendChild(option);
+}
+
+function librarianToggle(){
+    const libList = document.getElementById('librarians');
+    libList.disabled = !libList.disabled;
+    for(i=0;i<libList.children.length;i++){
+        libList.children[i].selected = libList.disabled;
+    }
 }
 
 function passData() {
@@ -331,4 +310,52 @@ function passData() {
     }	 
     //Re-enable LibList if Necessary.
     if(reenable){libList.disabled = true;}
-  }
+}
+
+function pickTime(){
+    clearHTML('dates');
+    //Get whichever value is selected.
+    let dateList = document.getElementsByName('reportBy');
+    let selected = '';
+    for(i=0;i<dateList.length;i++){
+        if(dateList[i].checked == true){
+            selected = dateList[i].id;
+        }
+    }
+    const newList = sortTypes[selected];
+    for(i=0;i<newList.length;i++){
+        let option = document.createElement('option');
+            option.id = newList[i].SemDate;
+            option.value = newList[i].SemDate;
+            option.innerHTML = newList[i].SemDate;
+            document.getElementById('dates').appendChild(option);
+    }
+}
+
+function setSemester(selectObject){
+    //Set variables.
+    const startEnd = selectObject.name;
+    const semesterID = startEnd+'Semester';
+    const year = selectObject.value;
+
+    //Sets the Semester based on the academic year provided.
+    const semesterList = document.getElementById(semesterID);
+
+    //Clear the original list.
+    clearHTML(semesterID);
+
+    for(i=0;i<dateInfo[year].length;i++){
+        let semesterArray = dateInfo[year][i];
+        let semesterOption = document.createElement('option');
+            semesterOption.id = startEnd+semesterArray.Semester;
+            semesterOption.value = semesterArray[startEnd];
+            semesterOption.innerText = semesterArray.Semester;
+            semesterList.appendChild(semesterOption);
+    }
+}
+
+
+
+
+
+

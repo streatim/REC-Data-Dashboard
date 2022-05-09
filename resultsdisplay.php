@@ -59,6 +59,18 @@
       'end' => $date['EndDate']
     ];
   }
+
+  //Do a query to gather College and Program information.
+  $prgmQuery = [
+    "SELECT DISTINCT A.ProgramID, A.Name, A.CollegeID",
+    "FROM ML_Public_Website.Programs A",
+    "ORDER BY A.CollegeID, TRUE, A.Name, TRUE"
+  ];
+  $programs = $libraryDB->query(implode(" ", $prgmQuery))->fetchAll(PDO::FETCH_ASSOC);
+  foreach($programs as $program){
+    $formPrograms[$program['CollegeID']][$program['ProgramID']] = $program['Name'];
+  }
+
   //Set the Javascript JSON objects.
   echo '<script type="text/javascript">';
     echo 'const sortTypes = {';
@@ -144,6 +156,40 @@
                 }
               ?>
             </select>
+          </fieldset>
+          <fieldset class="reportFieldsets programQuestion">
+          <legend>Programs</legend>
+            <div class="programs">
+              <div>
+                <label for="allPrograms">Program List</label>
+                <select name="allPrograms" id="allPrograms" multiple size="10">
+                  <?php 
+                    foreach($formPrograms as $college => $prgmArray){
+                      echo '<optgroup label="'.$college.'">';
+                      foreach($prgmArray as $programID => $programName){
+                        echo '<option value="'.$programID.'">'.$programName.'</option>';
+                      }
+                      echo '</optgroup>';
+                    }
+                  ?>
+                </select>
+              </div>
+              <div class="addDelete">
+                <input type="button" value="Add All" onclick="addProgram('all')">
+                <br><br>
+                <input type="button" value="Add Selected" onclick="addProgram()">
+                <br><br>
+                <input type="button" value="Remove Selected" onclick="remove()">
+                <br><br>
+                <input type="button" value="Remove All" onclick="remove('all')">
+              </div>
+              <div>
+                <label for="selectedPrograms">Selected Programs</label>
+                <select name="selectedPrograms" id="selectedPrograms" multiple size="10">
+                </select>
+              </div>
+
+              </div>
           </fieldset>    
         </div>
         <br>
