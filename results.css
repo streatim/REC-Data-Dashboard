@@ -1,0 +1,158 @@
+.formSelect{
+    width: 250px;
+}
+
+.mainSpace{
+    display: inline-grid !important;
+    grid-template-columns: minmax(0, 650px) minmax(0, 500px);
+    grid-gap: 1em;
+    grid-auto-rows: min-content;
+    margin-bottom: 1em;
+}
+
+.mainSpace.filters{
+    grid-template-columns: 1fr 1fr;
+}
+
+.mainSpace.filters .inner{
+    display: inline-grid !important;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 1em;
+    grid-auto-rows: 1fr;
+    margin-bottom: 1em;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+.resultGraph{
+    width: 100%;
+    height: 100%;
+    border: 2px;
+    border-style: solid;
+    border-color: transparent;
+}
+
+.selected{
+    border-color: #00274c;    
+    box-shadow: 3px 3px 1px grey;
+}
+
+.reportFieldsets{
+    border: 1px solid #c0c0c0;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.innerFieldsets{
+    box-sizing: border-box;
+}
+
+#chartDivs{
+    display: inline-grid !important;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-rows: 1fr;
+}
+
+#facetForm td, table, tr{
+    background-color: #f9f9f9;
+    margin-bottom: 0px;
+}
+
+#mainBox{
+    border: 1px;
+    border-style: solid;
+    height: 360px;
+    width: 650px;
+    float: left;
+    box-shadow: 10px 10px 5px grey;
+    visibility: hidden;
+}
+
+#rightBox{
+    width: 500px;
+    float: right;
+    visibility: hidden;
+}
+
+#rightBox thead{
+    background-color: #465d85;
+    color: #ffffff;
+}
+
+#tsvBox, #tablesBox {
+    border: 1px;
+    border-style: solid;
+    border-color: black;
+    margin: 10px;
+    padding: 5px;
+    background-color: #E0E0E0;
+    box-shadow: 10px 10px 5px grey;
+}
+
+#tsvBox {
+    margin-bottom: 30px;
+}
+
+#rightBox tbody tr:hover{
+    background-color: #ffcb05;
+}
+
+/* Media Queries */
+@media all and (max-width: 1200px) {
+    .mainSpace{
+        grid-template-columns: minmax(0, 650px);
+    }
+    #rightBox{
+        width: 650px;
+    }
+    #chartDivs{
+        grid-template-columns: 250px 250px 250px;
+        grid-auto-rows: 1fr;
+    }
+}
+
+@media all and (max-width: 750px) {
+    .mainSpace{
+        grid-template-columns: minmax(0,500px);
+    }
+    #rightBox{
+        width: 500px;
+    }
+    #mainBox{
+        display: none;
+    }
+    #chartDivs{
+        grid-template-columns: 250px 250px;
+        grid-auto-rows: 1fr;
+    }
+}
+
+@media all and (max-width: 650px) {
+    .mainSpace{
+        grid-template-columns: minmax(0, 420px);
+    }
+    #rightBox{
+        width: 420px;
+    }
+    .mainSpace.filters{
+        grid-template-columns: 1fr;
+    }
+    #chartDivs{
+        grid-template-columns: 420px;
+    }
+}
+
+@media all and (max-width: 420px) {
+    .mainSpace{
+        grid-template-columns: minmax(0, 300px);
+    }
+    #mainBox{
+        display: none;
+    }
+    #rightBox{
+        width: 300px;
+    }
+    #chartDivs{
+        grid-template-columns: 300px;
+    }
+}
