@@ -175,13 +175,13 @@
                 </select>
               </div>
               <div class="addDelete">
-                <input type="button" value="Add All" onclick="addProgram('all')">
+                <input type="button" value="Add All" onclick="moveProgram('allPrograms', 'selectedPrograms', 'all')">
                 <br><br>
-                <input type="button" value="Add Selected" onclick="addProgram()">
+                <input type="button" value="Add Selected" onclick="moveProgram('allPrograms', 'selectedPrograms')">
                 <br><br>
-                <input type="button" value="Remove Selected" onclick="remove()">
+                <input type="button" value="Remove Selected" onclick="moveProgram('selectedPrograms', 'allPrograms')">
                 <br><br>
-                <input type="button" value="Remove All" onclick="remove('all')">
+                <input type="button" value="Remove All" onclick="moveProgram('selectedPrograms', 'allPrograms', 'all')">
               </div>
               <div>
                 <label for="selectedPrograms">Selected Programs</label>
