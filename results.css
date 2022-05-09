@@ -1,3 +1,13 @@
+.addDelete{
+    margin: auto;
+    width: 100%;
+    padding-left: 25%;
+}
+.addDelete input[type="button"]{
+    min-width: 60%;
+    padding: 0.25em;
+}
+
 .formSelect{
     width: 250px;
 }
