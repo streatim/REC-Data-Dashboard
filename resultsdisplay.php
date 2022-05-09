@@ -175,11 +175,11 @@
                 </select>
               </div>
               <div class="addDelete">
-                <input type="button" value="Add All" onclick="moveProgram('allPrograms', 'selectedPrograms', 'all')">
+                <input type="button" value="Add All" onclick="programMove('allPrograms', 'selectedPrograms', 'all')">
                 <br><br>
-                <input type="button" value="Add Selected" onclick="moveProgram('allPrograms', 'selectedPrograms')">
+                <input type="button" value="Add Selected" onclick="programMove('allPrograms', 'selectedPrograms')">
                 <br><br>
-                <input type="button" value="Remove Selected" onclick="moveProgram('selectedPrograms', 'allPrograms')">
+                <input type="button" value="Remove Selected" onclick="programMove('selectedPrograms', 'allPrograms')">
                 <br><br>
                 <input type="button" value="Remove All" onclick="moveProgram('selectedPrograms', 'allPrograms', 'all')">
               </div>

@@ -2,84 +2,6 @@ google.charts.load("current", {packages:["corechart"]});
 google.charts.load('current', {packages: ['table']});
 let chartDataObject = new Object();
 
-function moveProgram(source, target, isAll = false){
-    let addList = programBuildNewList(source, isAll);
-    programCreateList(addList, target);
-}
-
-function programBuildNewList(source, isAll){
-    const selectedList = document.getElementById(source);
-    //Put together the list of items to move.
-    const moveList = (isAll) ? selectedList.querySelectorAll('option') : selectedList.querySelectorAll('option:checked');
-
-    //Go through and get the information of each selected item, then remove it from the program list.
-    let addList = new Array();
-    for(i=0; i<moveList.length; i++){
-        let parent = moveList[i].parentElement;
-        let parentGroup = parent.label;
-        addList.push({
-            'Parent' : parentGroup,
-            'Value' : moveList[i].value,
-            'Text' : moveList[i].innerText
-        });
-        //Remove from the Add List.
-        selectedList.remove(moveList[i].index);
-        if(parent.childElementCount === 0){
-            //There are no children left under this parent. Go ahead and remove the optgroup.
-            parent.remove();
-        }
-    }
-    //Sort the addList by Parent, then each parent group by the name. At present this is going to be done twice (because, in theory, when I get a better workflow going here we'll only need to sort here)
-    addList.sort((a, b) => a.Parent.localeCompare(b.Parent) || a.Text.localeCompare(b.Text));
-    return addList;
-}
-
-function programCreateList(addList, target){
-    //This isn't the most efficient way to do this, I believe, but basically we'll copy the target box, clear it, and then merge everything and rewrite it. It's...not great. But it'll get it done for right now.
-    //Copy the target box.
-    let newList = document.getElementById(target);
-    let copyList = addList;
-    let newOptions = newList.querySelectorAll('option');
-    if(newOptions.length>0){
-        //There are existing options. We'll need to copy it out.
-        for(i=0; i<newOptions.length; i++){
-            let parent = newOptions[i].parentElement;
-            let parentGroup = parent.label;
-            copyList.push({
-                'Parent' : parentGroup,
-                'Value' : newOptions[i].value,
-                'Text' : newOptions[i].innerText
-            });
-        }
-    }
-    //Now sort the copyList array. This is a repeated statement - if there was nothing copied, we essentially sort the same object the same way twice. Once we fix up this workflow, we should be able to do this only once.
-    copyList.sort((a, b) => a.Parent.localeCompare(b.Parent) || a.Text.localeCompare(b.Text));
-
-    //Delete the old list.
-    newList.innerHTML = '';
-
-    //Now run through the Copy List and add each object.
-    for(i=0; i<addList.length; i++){
-        let parent = addList[i].Parent;
-        let value = addList[i].Value;
-        let text = addList[i].Text;
-
-        if(newList.querySelectorAll('optgroup[label="'+parent+'"]').length === 0){
-            //The optGroup doesn't exist.
-            let parentGroup = document.createElement('optGroup');
-            parentGroup.label = parent;
-            newList.appendChild(parentGroup);
-        } 
-
-        let parentElement = newList.querySelectorAll('optGroup[label="'+parent+'"]')[0];
-        let option = document.createElement('option');
-            option.value = value;
-            option.innerText = text;
-            parentElement.appendChild(option);
-    }
-}
-
-
 function chartType(divElement, data, options, type) {
     switch(type){
         case 'AnnotationChart':{
@@ -387,6 +309,83 @@ function pickTime(){
             option.value = newList[i].SemDate;
             option.innerHTML = newList[i].SemDate;
             document.getElementById('dates').appendChild(option);
+    }
+}
+
+function programMove(source, target, isAll = false){
+    let addList = programBuildNewList(source, isAll);
+    programCreateList(addList, target);
+}
+
+function programBuildNewList(source, isAll){
+    const selectedList = document.getElementById(source);
+    //Put together the list of items to move.
+    const moveList = (isAll) ? selectedList.querySelectorAll('option') : selectedList.querySelectorAll('option:checked');
+
+    //Go through and get the information of each selected item, then remove it from the program list.
+    let addList = new Array();
+    for(i=0; i<moveList.length; i++){
+        let parent = moveList[i].parentElement;
+        let parentGroup = parent.label;
+        addList.push({
+            'Parent' : parentGroup,
+            'Value' : moveList[i].value,
+            'Text' : moveList[i].innerText
+        });
+        //Remove from the Add List.
+        selectedList.remove(moveList[i].index);
+        if(parent.childElementCount === 0){
+            //There are no children left under this parent. Go ahead and remove the optgroup.
+            parent.remove();
+        }
+    }
+    //Sort the addList by Parent, then each parent group by the name. At present this is going to be done twice (because, in theory, when I get a better workflow going here we'll only need to sort here)
+    addList.sort((a, b) => a.Parent.localeCompare(b.Parent) || a.Text.localeCompare(b.Text));
+    return addList;
+}
+
+function programCreateList(addList, target){
+    //This isn't the most efficient way to do this, I believe, but basically we'll copy the target box, clear it, and then merge everything and rewrite it. It's...not great. But it'll get it done for right now.
+    //Copy the target box.
+    let newList = document.getElementById(target);
+    let copyList = addList;
+    let newOptions = newList.querySelectorAll('option');
+    if(newOptions.length>0){
+        //There are existing options. We'll need to copy it out.
+        for(i=0; i<newOptions.length; i++){
+            let parent = newOptions[i].parentElement;
+            let parentGroup = parent.label;
+            copyList.push({
+                'Parent' : parentGroup,
+                'Value' : newOptions[i].value,
+                'Text' : newOptions[i].innerText
+            });
+        }
+    }
+    //Now sort the copyList array. This is a repeated statement - if there was nothing copied, we essentially sort the same object the same way twice. Once we fix up this workflow, we should be able to do this only once.
+    copyList.sort((a, b) => a.Parent.localeCompare(b.Parent) || a.Text.localeCompare(b.Text));
+
+    //Delete the old list.
+    newList.innerHTML = '';
+
+    //Now run through the Copy List and add each object.
+    for(i=0; i<addList.length; i++){
+        let parent = addList[i].Parent;
+        let value = addList[i].Value;
+        let text = addList[i].Text;
+
+        if(newList.querySelectorAll('optgroup[label="'+parent+'"]').length === 0){
+            //The optGroup doesn't exist.
+            let parentGroup = document.createElement('optGroup');
+            parentGroup.label = parent;
+            newList.appendChild(parentGroup);
+        } 
+
+        let parentElement = newList.querySelectorAll('optGroup[label="'+parent+'"]')[0];
+        let option = document.createElement('option');
+            option.value = value;
+            option.innerText = text;
+            parentElement.appendChild(option);
     }
 }
 
