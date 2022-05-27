@@ -81,6 +81,8 @@ Total # of Students in Courses
 
         //We'll also need to account for individual classes as necessary. 
         $whereLibClause = 'WHERE A.Librarian IN ("'.implode('","', $_POST['librarians']).'")';
+        $wherePrgmClause = ' AND A1.ProgramID IN ("'.implode('","', $_POST['selectedPrograms']).'")';
+
         if(count($dateReqs)>0){$join = ' AND (';
             foreach($dateReqs AS $year=>$semesters){
                 if(!isset($boolean)){$boolean = ' ';}else{$boolean = ' OR ';}
@@ -89,7 +91,7 @@ Total # of Students in Courses
             }
             $whereSemClause .= ')';       
         }else{$join = ""; $whereSemClause = '';}
-        $whereJointClause = $whereLibClause.$join.$whereSemClause;
+        $whereJointClause = $whereLibClause.$wherePrgmClause.$join.$whereSemClause;
 
         //Put together a date array for the monthly queries
         $dateQuery = [
@@ -114,7 +116,7 @@ Total # of Students in Courses
         foreach ($period as $dt) {$dateArray[] = $dt->format("Y-n");}
 
         //Put together the required FROM clause to make sure the WHERE works.
-        $fromClause  = 'FROM ML_LRC.CourseInfo A';
+        $fromClause  = 'FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID';
 ?>
 <?php //Leadership-Only Embed Queries
     if(in_array($_POST['uniq'], $leadershipArray)){
@@ -150,13 +152,14 @@ Total # of Students in Courses
             "Type" => "Download"
         ];
 
-        //Table describing how many classes a librarian is embedded in for the selected time period.
+        //Table describing how many classes a librarian is embedded in for the selected time period and programs.
         //2.) # of Courses broken down by Librarian (Table for the Selected Period)
         $graphArray[] = [
             "Query"=>   [
                 "SELECT CONCAT(IFNULL(B.StaffFName, B1.StaffFName), ' ', IFNULL(B.StaffLName, B1.StaffLName)) AS 'Librarian Name',",
-                "SUM(IF((".$whereSemClause.", 1, 0)) AS 'Courses'",
+                "SUM(IF((".$whereSemClause.$wherePrgmClause.", 1, 0)) AS 'Courses'",
                 "FROM ML_LRC.CourseInfo A",
+                "LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID",
                 "LEFT OUTER JOIN ML_Public_Website.Staff B ON B.UniqName = A.Librarian",
                 "LEFT OUTER JOIN ML_LRC.HistoricalUsers B1 ON A.Librarian = B1.UniqName",                
                 "WHERE (B.DeptList LIKE '%Librarian%' OR B.DeptList IS NULL)",

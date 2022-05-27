@@ -59,6 +59,18 @@
       'end' => $date['EndDate']
     ];
   }
+
+  //Do a query to gather College and Program information.
+  $prgmQuery = [
+    "SELECT DISTINCT A.ProgramID, A.Name, A.CollegeID",
+    "FROM ML_Public_Website.Programs A",
+    "ORDER BY A.CollegeID, TRUE, A.Name, TRUE"
+  ];
+  $programs = $libraryDB->query(implode(" ", $prgmQuery))->fetchAll(PDO::FETCH_ASSOC);
+  foreach($programs as $program){
+    $formPrograms[$program['CollegeID']][$program['ProgramID']] = $program['Name'];
+  }
+
   //Set the Javascript JSON objects.
   echo '<script type="text/javascript">';
     echo 'const sortTypes = {';
@@ -95,7 +107,7 @@
 	
     <div class="large-12 columns">  
       <form id="facetForm">
-        <div class="mainSpace filters">
+        <div id="facetFormFilters" class="mainSpace filters">
           <input type="hidden" name="uniq" id="uniq" value="<?php echo $whoami; ?>">
           <fieldset class="reportFieldsets">
             <legend>Date Period</legend>
@@ -144,11 +156,46 @@
                 }
               ?>
             </select>
+          </fieldset>
+          <fieldset class="reportFieldsets programQuestion">
+          <legend>Programs</legend>
+            <div class="programs">
+              <div>
+                <label for="allPrograms">Program List</label>
+                <select name="allPrograms" id="allPrograms" multiple size="10">
+                  <?php 
+                    foreach($formPrograms as $college => $prgmArray){
+                      echo '<optgroup label="'.$college.'">';
+                      foreach($prgmArray as $programID => $programName){
+                        echo '<option value="'.$programID.'">'.$programName.'</option>';
+                      }
+                      echo '</optgroup>';
+                    }
+                  ?>
+                </select>
+              </div>
+              <div class="addDelete">
+                <input type="button" value="Add All" onclick="programMove('allPrograms', 'selectedPrograms', 'all')">
+                <br><br>
+                <input type="button" value="Add Selected" onclick="programMove('allPrograms', 'selectedPrograms')">
+                <br><br>
+                <input type="button" value="Remove Selected" onclick="programMove('selectedPrograms', 'allPrograms')">
+                <br><br>
+                <input type="button" value="Remove All" onclick="programMove('selectedPrograms', 'allPrograms', 'all')">
+              </div>
+              <div>
+                <label for="selectedPrograms">Selected Programs</label>
+                <select name="selectedPrograms[]" id="selectedPrograms" multiple size="10">
+                </select>
+              </div>
+
+              </div>
           </fieldset>    
         </div>
         <br>
-        <input type="button" value="Submit" onclick="passData()">
-      </form>  
+        <input id="submitButton" type="button" value="Submit" onclick="passData()">
+        <i class="fa-plus-circle fa-2x" id="expandButton" onclick="toggleButton()" hidden></i> 
+      </form> 
       <hr>
       <div class="mainSpace">
         <div id="mainBox"></div>
