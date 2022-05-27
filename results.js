@@ -231,13 +231,11 @@ function librarianToggle(){
 }
 
 function passData() {
-    //First thing we do is validate that the dates are set appropriately (start date before end date)
-    if(!dateValidate()){
-        window.alert('The end date must be equal to or after the selected start date.');
-        return false;
-    }
+    //First thing we do is validate that the dates are set appropriately (start date before end date) and that a program is selected.
+    if(!validateData()){return false;}
+    
     let debug=false;
-
+    
     if(document.getElementsByClassName('mainBox').length==0){
         document.getElementById('mainBox').classList.add('mainBox');
     }
@@ -245,6 +243,12 @@ function passData() {
     const libList = document.getElementById('librarians');
     let reenable = false;
     if(libList.disabled == true){libList.disabled = false; reenable = true;}
+
+    //Select all the selected programs (the display is technically not "selected")
+    const selectedPrograms = document.getElementById('selectedPrograms');
+    const selectedOptions = selectedPrograms.querySelectorAll('option');
+    for(i=0; i<selectedOptions.length; i++){selectedOptions[i].selected = true;}
+
     if(!debug){
         $.ajax({
             type: 'post',
@@ -252,14 +256,13 @@ function passData() {
             dataType: "json",
             data: $('form').serialize(),
             success: function (response) {
-                document.getElementById('mainBox').style.visiblity = "visible";
+                document.getElementById('mainBox').style.visibility = "visible";
                 document.getElementById('mainBox').innerHTML = response;
                 
                 chartDataObject = response; 
                 clearHTML('chartDivs');
                 clearHTML('tableCheck');
                 clearHTML('tsvCheck');
-                document.getElementById('mainBox').style.visibility = "visible";
                 document.getElementById('rightBox').style.visibility = "visible";
                 firstPreviewBox = '';
                 for(i=0;i<response.length;i++){
@@ -281,6 +284,8 @@ function passData() {
             data: $('form').serialize(),
             success: function (response) {
                 console.log(response);
+                document.getElementById('mainBox').style.visibility = "visible";
+                document.getElementById('mainBox').innerHTML = response;
             },
             error: function(e){
                 //console.log("The request failed");
@@ -310,11 +315,6 @@ function pickTime(){
             option.innerHTML = newList[i].SemDate;
             document.getElementById('dates').appendChild(option);
     }
-}
-
-function programMove(source, target, isAll = false){
-    let addList = programBuildNewList(source, isAll);
-    programCreateList(addList, target);
 }
 
 function programBuildNewList(source, isAll){
@@ -389,6 +389,16 @@ function programCreateList(addList, target){
     }
 }
 
+function programMove(source, target, isAll = false){
+    let addList = programBuildNewList(source, isAll);
+    programCreateList(addList, target);
+}
+
+function programValidate(){
+    let selected = document.getElementById('selectedPrograms');
+    return (selected.childElementCount>0);
+}
+
 function setSemester(selectObject){
     //Set variables.
     const startEnd = selectObject.name;
@@ -411,8 +421,16 @@ function setSemester(selectObject){
     }
 }
 
+function validateData(){
+    if(!dateValidate()){
+        window.alert('The end date must be equal to or after the selected start date.');
+        return false;
+    }
 
+    if(!programValidate()){
+        window.alert('At least one program must be selected.');
+        return false;
+    }
 
-
-
-
+    return true;
+}

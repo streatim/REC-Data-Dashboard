@@ -181,11 +181,11 @@
                 <br><br>
                 <input type="button" value="Remove Selected" onclick="programMove('selectedPrograms', 'allPrograms')">
                 <br><br>
-                <input type="button" value="Remove All" onclick="moveProgram('selectedPrograms', 'allPrograms', 'all')">
+                <input type="button" value="Remove All" onclick="programMove('selectedPrograms', 'allPrograms', 'all')">
               </div>
               <div>
                 <label for="selectedPrograms">Selected Programs</label>
-                <select name="selectedPrograms" id="selectedPrograms" multiple size="10">
+                <select name="selectedPrograms[]" id="selectedPrograms" multiple size="10">
                 </select>
               </div>
 
