@@ -13,7 +13,7 @@
 }
 
 .mainSpace{
-    display: inline-grid !important;
+    display: inline-grid;
     grid-template-columns: minmax(0, 650px) minmax(0, 500px);
     grid-gap: 1em;
     grid-auto-rows: min-content;
@@ -29,7 +29,7 @@
 }
 
 .mainSpace.filters .inner{
-    display: inline-grid !important;
+    display: inline-grid;
     grid-template-columns: 1fr 1fr;
     grid-gap: 1em;
     grid-auto-rows: 1fr;
@@ -39,7 +39,7 @@
 }
 
 .programs{
-    display: inline-grid !important;
+    display: inline-grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 1em;
     grid-auto-rows: 1fr;
@@ -72,9 +72,15 @@
 }
 
 #chartDivs{
-    display: inline-grid !important;
+    display: inline-grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-auto-rows: 1fr;
+}
+
+#expandButton {
+    float: right;
+    cursor: pointer;
+    margin-bottom: 1rem;
 }
 
 #facetForm td, table, tr{

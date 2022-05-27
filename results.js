@@ -256,6 +256,15 @@ function passData() {
             dataType: "json",
             data: $('form').serialize(),
             success: function (response) {
+                //Turn off display of the filters and show the expand button.
+                const form = document.getElementById('facetFormFilters');
+                form.style.display = "none";
+                const button = document.getElementById('expandButton')
+                button.hidden = false;
+                button.classList.add('fa');
+                const submitBtn = document.getElementById('submitButton');
+                submitBtn.hidden = true;
+
                 document.getElementById('mainBox').style.visibility = "visible";
                 document.getElementById('mainBox').innerHTML = response;
                 
@@ -418,6 +427,25 @@ function setSemester(selectObject){
             semesterOption.value = semesterArray[startEnd];
             semesterOption.innerText = semesterArray.Semester;
             semesterList.appendChild(semesterOption);
+    }
+}
+
+function toggleButton(){
+    console.log('Click!');
+    const form = document.getElementById('facetFormFilters');
+    const button = document.getElementById('expandButton');
+    const submitBtn = document.getElementById('submitButton');
+
+    if(form.style.display === "inline-grid"){
+        form.style.display = "none";
+        button.classList.remove('fa-minus-circle');
+        button.classList.add('fa-plus-circle');
+        submitBtn.hidden = true;
+    } else {
+        form.style.display = "inline-grid";
+        button.classList.remove('fa-plus-circle');
+        button.classList.add('fa-minus-circle');
+        submitBtn.hidden = false;
     }
 }
 

@@ -107,7 +107,7 @@
 	
     <div class="large-12 columns">  
       <form id="facetForm">
-        <div class="mainSpace filters">
+        <div id="facetFormFilters" class="mainSpace filters">
           <input type="hidden" name="uniq" id="uniq" value="<?php echo $whoami; ?>">
           <fieldset class="reportFieldsets">
             <legend>Date Period</legend>
@@ -193,8 +193,9 @@
           </fieldset>    
         </div>
         <br>
-        <input type="button" value="Submit" onclick="passData()">
-      </form>  
+        <input id="submitButton" type="button" value="Submit" onclick="passData()">
+        <i class="fa-plus-circle fa-2x" id="expandButton" onclick="toggleButton()" hidden></i> 
+      </form> 
       <hr>
       <div class="mainSpace">
         <div id="mainBox"></div>
