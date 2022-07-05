@@ -24,6 +24,176 @@
 ACRL Specific Questions
 - Attendance 
 
+COPIES OF QUERIES / NOTES
+SELECT A.*  
+    FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID
+    WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY A.CourseID
+
+SELECT SUM(Prime.Students) AS 'Total Number of Students Supported'
+FROM (
+    Select A.Students
+    FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID
+    WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+    GROUP BY A.CourseID
+) Prime
+
+
+SELECT SUM(Prime.LibGuideUsage) AS 'Total Number of LibGuide Views for Attached LibGuides'
+FROM (
+    SELECT A.LibGuideUsage
+    FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID
+    WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+    GROUP BY A.CourseID
+) Prime
+
+
+SELECT C.AssessName as 'Assessment Type', COUNT(A.CourseID) AS 'Courses'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID RIGHT JOIN ML_LRC.BridgeCourseAssessment B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.CourseAssessment C ON B.AssessID = C.AssessID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY C.AssessName
+
+SELECT D.Name AS CourseLevel, SUM(if(A.Delivery = 'In-Person', 1, 0)) AS 'In-Person', SUM(if(A.Delivery = 'Hybrid', 1, 0)) AS 'Hybrid', SUM(IF(A.Delivery = 'Online', 1, 0)) AS 'Online'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.BridgeCourseLevel C ON C.CourseID = A.CourseID LEFT JOIN ML_LRC.CourseLevel D ON C.LevelID = D.LevelID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY CourseLevel
+
+SELECT D.Name AS CourseLevel, COUNT(D.Name) AS 'Courses'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.BridgeCourseLevel C ON C.CourseID = A.CourseID LEFT JOIN ML_LRC.CourseLevel D ON C.LevelID = D.LevelID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+AND D.Name IS NOT NULL
+GROUP BY CourseLevel
+
+SELECT A.Delivery, COUNT(A.Delivery) AS 'Total'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY Delivery
+
+SELECT D.Name as College, COUNT(DISTINCT A.CourseID) AS Courses
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.BridgeCourseProgram B ON A.CourseID = B.CourseID LEFT JOIN ML_Public_Website.Programs C ON B.ProgramID = C.ProgramID LEFT JOIN ML_Public_Website.Colleges D ON C.CollegeID = D.ID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+AND D.Name IS NOT NULL
+GROUP BY D.Name
+
+SELECT D.Name, COUNT(C.ActivityID) AS Interactions
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID LEFT JOIN ML_LRC.Activities D ON C.ActivityID = D.ActivityID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY D.Name
+ORDER BY Count(C.ActivityID) DESC
+LIMIT 5
+
+SELECT D.Name, COUNT(C.ActivityID) AS Interactions
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID LEFT JOIN ML_LRC.Activities D ON C.ActivityID = D.ActivityID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY D.Name
+ORDER BY Count(C.ActivityID) DESC
+
+SELECT C2.Name AS 'Program',
+coalesce(sum(case when B2.Type = 'Student Consultation' then 1 end), 0) 'Student Consultation', coalesce(sum(case when B2.Type = 'Canvas Announcement' then 1 end), 0) 'Canvas Announcement', coalesce(sum(case when B2.Type = 'Research Skill Session/Workshops (In-Person)' then 1 end), 0) 'Research Skill Session/Workshops (In-Person)', coalesce(sum(case when B2.Type = 'Assignment' then 1 end), 0) 'Assignment', coalesce(sum(case when B2.Type = 'Customized handout' then 1 end), 0) 'Customized handout', coalesce(sum(case when B2.Type = 'Customized Subject Guide' then 1 end), 0) 'Customized Subject Guide', coalesce(sum(case when B2.Type = 'Online learning object(s)' then 1 end), 0) 'Online learning object(s)', coalesce(sum(case when B2.Type = 'Customized presentation slides' then 1 end), 0) 'Customized presentation slides', coalesce(sum(case when B2.Type = 'Orientation(s)' then 1 end), 0) 'Orientation(s)', coalesce(sum(case when B2.Type = 'Research Skill Session/Workshops (Online - Synchronous)' then 1 end), 0) 'Research Skill Session/Workshops (Online - Synchronous)', coalesce(sum(case when B2.Type = 'Research Skill Session/Workshops (Online - Asynchronous)' then 1 end), 0) 'Research Skill Session/Workshops (Online - Asynchronous)'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID
+RIGHT JOIN ML_LRC.Interaction B1 ON A.CourseID = B1.CourseID
+LEFT JOIN ML_LRC.InteractionType B2 ON B1.Type = B2.TypeID
+RIGHT JOIN ML_LRC.BridgeCourseProgram C1 ON A.CourseID = C1.CourseID
+LEFT JOIN ML_Public_Website.Programs C2 ON C1.ProgramID = C2.ProgramID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY C2.Name
+
+SELECT C.Name, COUNT(B.ActivityID) AS 'Course Support'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.Activities C ON B.ActivityID = C.ActivityID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY C.Name
+ORDER BY Count(B.ActivityID) DESC
+LIMIT 5
+
+SELECT C.Name, COUNT(B.ActivityID) AS 'Course Support'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.Activities C ON B.ActivityID = C.ActivityID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY C.Name
+ORDER BY Count(B.ActivityID) DESC
+
+SELECT C.Type, COUNT(B.Type) AS 'Activity Type'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY C.Type
+ORDER BY Count(B.Type) DESC
+LIMIT 5
+
+SELECT CONCAT(A.Semester, ' - ', A.Year) AS Semester, SUM(if(B.ActivityID = '7', 1, 0)) AS 'Create online learning objects', SUM(if(B.ActivityID = '5', 1, 0)) AS 'Develop online subject guide', SUM(if(B.ActivityID = '6', 1, 0)) AS 'Embedded in Canvas site', SUM(if(B.ActivityID = '14', 1, 0)) AS 'Identify resources (non-OER)', SUM(if(B.ActivityID = '15', 1, 0)) AS 'Identify OER resources'
+FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID
+WHERE A.Librarian IN ("aseipke") AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58") AND ( (A.Year = "2021" AND A.Semester IN ("Summer Full","Summer I","Summer II","Fall")) OR (A.Year = "2022" AND A.Semester IN ("Winter")))
+GROUP BY Semester
+
+
+SELECT '2021-5' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-5'
+UNION ALL
+
+SELECT '2021-6' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-6'
+UNION ALL
+
+SELECT '2021-7' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-7'
+UNION ALL
+
+SELECT '2021-8' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-8'
+UNION ALL
+
+SELECT '2021-9' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-9'
+UNION ALL
+
+SELECT '2021-10' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-10'
+UNION ALL
+
+SELECT '2021-11' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-11'
+UNION ALL
+
+SELECT '2021-12' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-12'
+UNION ALL
+
+SELECT '2022-1' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2022-1'
+UNION ALL
+
+SELECT '2022-2' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2022-2'
+UNION ALL
+
+SELECT '2022-3' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2022-3'
+UNION ALL
+
+SELECT '2022-4' , IFNULL(SUM(if(B.Type = '9', 1, 0)), 0) AS 'Orientation(s)', IFNULL(SUM(if(B.Type = '6', 1, 0)), 0) AS 'Customized Subject Guide', IFNULL(SUM(if(B.Type = '8', 1, 0)), 0) AS 'Customized presentation slides', IFNULL(SUM(if(B.Type = '2', 1, 0)), 0) AS 'Canvas Announcement', IFNULL(SUM(if(B.Type = '10', 1, 0)), 0) AS 'Research Skill Session/Workshops (Online - Synchronous)' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2022-4'
+
+
+SELECT '2021-5' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-5'
+UNION ALL
+
+SELECT '2021-6' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-6'
+UNION ALL
+
+SELECT '2021-7' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-7'
+UNION ALL
+
+SELECT '2021-8' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-8'
+UNION ALL
+
+SELECT '2021-9' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-9'
+UNION ALL
+
+SELECT '2021-10' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-10'
+UNION ALL
+
+SELECT '2021-11' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-11'
+UNION ALL
+
+SELECT '2021-12' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2021-12'
+UNION ALL
+
+SELECT '2022-1' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2022-1'
+UNION ALL
+
+SELECT '2022-2' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2022-2'
+UNION ALL
+
+SELECT '2022-3' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2022-3'
+UNION ALL
+
+SELECT '2022-4' , IFNULL(SUM(if(C.ActivityID = '18', 1, 0)), 0) AS 'Find sources', IFNULL(SUM(if(C.ActivityID = '16', 1, 0)), 0) AS 'Navigate Library website', IFNULL(SUM(if(C.ActivityID = '22', 1, 0)), 0) AS 'Basic database research strategies/techniques', IFNULL(SUM(if(C.ActivityID = '19', 1, 0)), 0) AS 'Evaluate sources', IFNULL(SUM(if(C.ActivityID = '17', 1, 0)), 0) AS 'Differentiate between sources' FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '2022-4'
 
 
 
@@ -31,7 +201,7 @@ Total # of Students in Courses
 */
 ?>
 <?php //Top Level Requirements (IF POST, Include Statements, Function declarations)
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+//    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         include($_SERVER['DOCUMENT_ROOT'] . '/staff/forms/formFunctions.php'); 
         include($_SERVER['DOCUMENT_ROOT'] . '/Connections/ML_DatabasesPDO.php');     
         require_once($_SERVER['DOCUMENT_ROOT'].'/secure/library/rec/secureQueries.php');
@@ -82,6 +252,15 @@ Total # of Students in Courses
         //We'll also need to account for individual classes as necessary. 
         $whereLibClause = 'WHERE A.Librarian IN ("'.implode('","', $_POST['librarians']).'")';
         $wherePrgmClause = ' AND A1.ProgramID IN ("'.implode('","', $_POST['selectedPrograms']).'")';
+        $debug = TRUE;
+        if(isset($debug)){
+            $whereLibClause = 'WHERE A.Librarian IN ("aseipke")';
+            $wherePrgmClause = ' AND A1.ProgramID IN ("5", "6", "7", "8", "57", "58")';
+            $dateReqs = [
+                '2021' => ['Summer Full', 'Summer I', 'Summer II', 'Fall'],
+                '2022' => ['Winter']
+            ];
+        }
 
         if(count($dateReqs)>0){$join = ' AND (';
             foreach($dateReqs AS $year=>$semesters){
@@ -119,7 +298,8 @@ Total # of Students in Courses
         $fromClause  = 'FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID';
 ?>
 <?php //Leadership-Only Embed Queries
-    if(in_array($_POST['uniq'], $leadershipArray)){
+
+    if(in_array($_POST['uniq'], $leadershipArray)||isset($debug)){
         //Which Departments/Programs don't have a class with an Embedded Librarian in it?
         $graphArray[] = [
             "Query"=> [
@@ -156,22 +336,25 @@ Total # of Students in Courses
         //2.) # of Courses broken down by Librarian (Table for the Selected Period)
         $graphArray[] = [
             "Query"=>   [
-                "SELECT CONCAT(IFNULL(B.StaffFName, B1.StaffFName), ' ', IFNULL(B.StaffLName, B1.StaffLName)) AS 'Librarian Name',",
-                "SUM(IF((".$whereSemClause.$wherePrgmClause.", 1, 0)) AS 'Courses'",
-                "FROM ML_LRC.CourseInfo A",
-                "LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID",
-                "LEFT OUTER JOIN ML_Public_Website.Staff B ON B.UniqName = A.Librarian",
-                "LEFT OUTER JOIN ML_LRC.HistoricalUsers B1 ON A.Librarian = B1.UniqName",                
-                "WHERE (B.DeptList LIKE '%Librarian%' OR B.DeptList IS NULL)",
-                "GROUP BY B.UniqName",
-                "ORDER BY COURSES DESC, IFNULL(B.StaffLName, B1.StaffLName) ASC"
+                "SELECT Prime.Librarian AS 'Librarian Name', COUNT(Prime.Courses) AS 'Courses'",
+                "FROM (",
+                    "SELECT DISTINCT CONCAT(IFNULL(B.StaffFName, B1.StaffFName), ' ', IFNULL(B.StaffLName, B1.StaffLName)) AS 'Librarian',",
+                    "A.CourseID AS 'Courses'",
+                    "FROM ML_LRC.CourseInfo A",
+                    "LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID",
+                    "LEFT OUTER JOIN ML_Public_Website.Staff B ON B.UniqName = A.Librarian",
+                    "LEFT OUTER JOIN ML_LRC.HistoricalUsers B1 ON A.Librarian = B1.UniqName",
+                    "WHERE (B.DeptList LIKE '%Librarian%' OR B.DeptList IS NULL) AND",
+                    $whereSemClause.$wherePrgmClause,
+                ") Prime",
+                "GROUP BY Prime.Librarian",
+                "ORDER BY Prime.Librarian ASC"
             ],
             "Options"=> [
                 'title'=> 'Total # of Courses a Librarian has been Embedded In'
             ],
             "Type" => 'TableChart'
         ];
-
     }
 ?>
 <?php //BuildQueries.
@@ -179,13 +362,19 @@ Total # of Students in Courses
         //TypeIDs for the course types are: Synchronous (10), Asynchronous (11), In-Person(3). Each Row should be 
         $graphArray[] = [
             "Query"=> [
-                "SELECT A.Name, A.Number, A.Section, A.Students AS 'Enrollment',",
-                "COUNT(IF(B.Type = 3, 1, NULL)) AS 'In-Person',",
-                "COUNT(IF(B.Type = 10, 1, NULL)) AS 'Online-Synchronous',",
-                "COUNT(IF(B.Type = 11, 1, NULL)) AS 'Online-Asynchronous'",
-                $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID",
-                $whereJointClause,
-                "GROUP BY A.Name",
+                "SELECT Prime.Name, Prime.Number, Prime.Section, Prime.Enrollment,",
+                "COUNT(IF(Prime.Type = 3, 1, NULL)) AS 'In-Person',",
+                "COUNT(IF(Prime.Type = 10, 1, NULL)) AS 'Online-Synchronous',",
+                "COUNT(IF(Prime.Type = 11, 1, NULL)) AS 'Online-Asynchronous'",
+                "FROM (",
+                    "SELECT A.CourseID, A.Name, A.Number, A.Section, A.Students AS 'Enrollment', B.Type",
+                    $fromClause,
+                    "LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID",
+                    $whereJointClause,
+                    "GROUP BY A.CourseID, B.Type",
+                ") Prime ",
+                "ORDER BY Prime.Name",
+                "GROUP BY Prime.Name",
             ],
             "Options"=> [
                 'title'=>'ACRL Questions 71/73'
@@ -195,12 +384,16 @@ Total # of Students in Courses
 
 
 //Pie Chart : Total # of Courses, listed by Semester; if only one Semester, just say how many courses were there.
+//SELECT CONCAT(Prime.Semester, ' - ', Prime.Year) AS 'Semester', COUNT(Prime.CourseID) AS 'Courses' FROM (
+//) Prime GROUP BY Prime.Semester
 $graphArray[] = (count($_POST['semesterYear'])>1) ? [
     "Query"=>   [
-        "SELECT CONCAT(A.Semester, ' - ', A.Year) AS 'Semester', COUNT(A.CourseID) AS Courses",
+        "SELECT Prime.Semester, COUNT(Prime.CourseID) AS 'Courses'",
+        "FROM (SELECT CONCAT(A.Semester, ' - ', A.Year) AS 'Semester', A.CourseID",
         $fromClause,
         $whereJointClause,
-        "GROUP BY Semester"
+        "GROUP BY A.CourseID, CONCAT(A.Semester, ' - ', A.Year)) Prime",
+        "GROUP BY Prime.Semester"
     ],
     "Options"=> [
         'title' => 'Total # of Courses by Semester',
@@ -208,12 +401,14 @@ $graphArray[] = (count($_POST['semesterYear'])>1) ? [
     "Type" => 'TableChart'
 ] : [
     "Query"=>   [
-        "SELECT CONCAT(A.Semester, ' - ', A.Year) AS 'Semester', COUNT(A.CourseID) AS Courses",
+        "SELECT Prime.Semester, COUNT(Prime.CourseID) AS 'Courses'",
+        "FROM (SELECT CONCAT(A.Semester, ' - ', A.Year) AS 'Semester', A.CourseID",
         $fromClause,
         "LEFT JOIN ML_Public_Website.SemesterInfo B ON (A.Semester = B.Semester AND A.Year = YEAR(B.StartDate))",
         $whereJointClause,
-        "GROUP BY CONCAT(A.Semester, ' - ', A.Year)",
-        "ORDER BY B.StartDate, TRUE, B.EndDate, TRUE"
+        "GROUP BY A.CourseID, CONCAT(A.Semester, ' - ', A.Year)",
+        "ORDER BY B.StartDate, TRUE, B.EndDate, TRUE) Prime",
+        "GROUP BY Prime.Semester"
     ],
     "Options"=> [
         'title'=>'Total # of Courses Supported'
@@ -224,11 +419,17 @@ $graphArray[] = (count($_POST['semesterYear'])>1) ? [
 //Top 5 Activity Types Used (Total)
 $graphArray[] = [
     "Query"=> [
-        "SELECT COALESCE(C.Type, 'Total Activities'), COUNT(B.Type) AS 'Activity Type'",
-        $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID",
-        $whereJointClause,
-        "AND C.Type IS NOT NULL",
-        "GROUP BY C.Type",
+        "SELECT COALESCE(Prime.TypeName, 'Total Activities') AS 'Activity Type', COUNT(Prime.TypeNumber) AS 'Count'",
+        "FROM (",
+            "SELECT C.Type AS 'TypeName', B.Type AS 'TypeNumber' ",
+            $fromClause,
+            "LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID ",
+            "LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID",
+            $whereJointClause,
+            "AND C.Type IS NOT NULL",
+            "GROUP BY B.InteractionID",
+        ") Prime",
+        "GROUP BY Prime.TypeName",
         "WITH ROLLUP",
     ],
     "Options"=> [
@@ -270,9 +471,13 @@ $graphArray[] = [
 //# of Students Serviced
 $graphArray[] = [
     "Query"=> [
-        "SELECT SUM(Students) AS 'Total Number of Students Supported'",
-        $fromClause,
-        $whereJointClause
+        "SELECT SUM(Prime.Students) AS 'Total Number of Students Supported'",
+        "FROM (",
+            "SELECT A.Students",
+            $fromClause,
+            $whereJointClause,
+            "GROUP BY A.CourseID",
+        ") Prime"
     ],
     "Options"=> [
         'title'=>'Total # of Students Supported'
@@ -283,9 +488,12 @@ $graphArray[] = [
 //# of LibGuide Views.
 $graphArray[] = [
     "Query"=> [
-        "SELECT SUM(LibGuideUsage) AS 'Total Number of LibGuide Views for Attached LibGuides'",
+        "SELECT SUM(Prime.LibGuideUsage) AS 'Total Number of LibGuide Views for Attached LibGuides'",
+        "FROM (",
+        "SELECT A.LibGuideUsage",
         $fromClause,
-        $whereJointClause
+        $whereJointClause,
+        ") Prime"
     ],
     "Options"=> [
         'title'=>'Total # of LibGuide Views for Attached LibGuides'
@@ -580,6 +788,14 @@ if(count($dateArray)<13){
     ];
 }
 
+foreach($graphArray as $graph){
+    foreach($graph['Query'] as $stmt){
+        echo $stmt.'<br>';
+    }
+    echo '<hr>';
+}
+exit;
+
     foreach($graphArray as $graph){
         if(isset($graph['Options'])){$options = $graph['Options'];}else{$options = array();}
         $options['backgroundColor'] = '#F9F9F9';
@@ -588,5 +804,5 @@ if(count($dateArray)<13){
 ?>
 <?php //Echo Output and end the IF Statement.
         echo json_encode($output, JSON_NUMERIC_CHECK);
-    }
+ //   }
 ?>
