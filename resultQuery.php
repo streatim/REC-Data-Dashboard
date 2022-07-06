@@ -1,35 +1,3 @@
-<?php //STRUCTURE INFO
-  /* --Notes from meeting talking about this --
-  Notes from meeting:
-  How effective are various stratagies for reaching out to faculty?
-  Which research education skill/delivery method is used most?
-  -- Is this delivery method used most commonly for delivering this skill?
-  Which research skill is looked at most?
-  Skills and Colleges
-
-
-  From the original form:
-  A list of all the courses that have librarians. (List)
-  Breakdown of courses and semesters (how busy are each semester) (Pie Chart)
-
-  Which College/Programs have courses librarians are involved in. (a series of charts)
-  Chart of Research Skills Taught (series of charts)
-  Course/Program Activities & Resources (series of charts) 
-  Digital Education (series of charts)
-  Chart of how many students?
-  Chart of how many consultations were had.
-  Usage data of Subject Guide (listed)
-  Chart of which assessments were used. 
-  
-ACRL Specific Questions
-- Attendance 
-
-
-
-
-Total # of Students in Courses
-*/
-?>
 <?php //Top Level Requirements (IF POST, Include Statements, Function declarations)
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         include($_SERVER['DOCUMENT_ROOT'] . '/staff/forms/formFunctions.php'); 
@@ -119,6 +87,7 @@ Total # of Students in Courses
         $fromClause  = 'FROM ML_LRC.CourseInfo A LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID';
 ?>
 <?php //Leadership-Only Embed Queries
+
     if(in_array($_POST['uniq'], $leadershipArray)){
         //Which Departments/Programs don't have a class with an Embedded Librarian in it?
         $graphArray[] = [
@@ -156,22 +125,25 @@ Total # of Students in Courses
         //2.) # of Courses broken down by Librarian (Table for the Selected Period)
         $graphArray[] = [
             "Query"=>   [
-                "SELECT CONCAT(IFNULL(B.StaffFName, B1.StaffFName), ' ', IFNULL(B.StaffLName, B1.StaffLName)) AS 'Librarian Name',",
-                "SUM(IF((".$whereSemClause.$wherePrgmClause.", 1, 0)) AS 'Courses'",
-                "FROM ML_LRC.CourseInfo A",
-                "LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID",
-                "LEFT OUTER JOIN ML_Public_Website.Staff B ON B.UniqName = A.Librarian",
-                "LEFT OUTER JOIN ML_LRC.HistoricalUsers B1 ON A.Librarian = B1.UniqName",                
-                "WHERE (B.DeptList LIKE '%Librarian%' OR B.DeptList IS NULL)",
-                "GROUP BY B.UniqName",
-                "ORDER BY COURSES DESC, IFNULL(B.StaffLName, B1.StaffLName) ASC"
+                "SELECT Prime.Librarian AS 'Librarian Name', COUNT(Prime.Courses) AS 'Courses'",
+                "FROM (",
+                    "SELECT DISTINCT CONCAT(IFNULL(B.StaffFName, B1.StaffFName), ' ', IFNULL(B.StaffLName, B1.StaffLName)) AS 'Librarian',",
+                    "A.CourseID AS 'Courses'",
+                    "FROM ML_LRC.CourseInfo A",
+                    "LEFT JOIN ML_LRC.BridgeCourseProgram A1 ON A.CourseID = A1.CourseID",
+                    "LEFT OUTER JOIN ML_Public_Website.Staff B ON B.UniqName = A.Librarian",
+                    "LEFT OUTER JOIN ML_LRC.HistoricalUsers B1 ON A.Librarian = B1.UniqName",
+                    "WHERE (B.DeptList LIKE '%Librarian%' OR B.DeptList IS NULL) AND",
+                    $whereSemClause.$wherePrgmClause,
+                ") Prime",
+                "GROUP BY Prime.Librarian",
+                "ORDER BY Prime.Librarian ASC"
             ],
             "Options"=> [
                 'title'=> 'Total # of Courses a Librarian has been Embedded In'
             ],
             "Type" => 'TableChart'
         ];
-
     }
 ?>
 <?php //BuildQueries.
@@ -179,13 +151,19 @@ Total # of Students in Courses
         //TypeIDs for the course types are: Synchronous (10), Asynchronous (11), In-Person(3). Each Row should be 
         $graphArray[] = [
             "Query"=> [
-                "SELECT A.Name, A.Number, A.Section, A.Students AS 'Enrollment',",
-                "COUNT(IF(B.Type = 3, 1, NULL)) AS 'In-Person',",
-                "COUNT(IF(B.Type = 10, 1, NULL)) AS 'Online-Synchronous',",
-                "COUNT(IF(B.Type = 11, 1, NULL)) AS 'Online-Asynchronous'",
-                $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID",
-                $whereJointClause,
-                "GROUP BY A.Name",
+                "SELECT Prime.Name, Prime.Number, Prime.Section, Prime.Enrollment,",
+                "COUNT(IF(Prime.Type = 3, 1, NULL)) AS 'In-Person',",
+                "COUNT(IF(Prime.Type = 10, 1, NULL)) AS 'Online-Synchronous',",
+                "COUNT(IF(Prime.Type = 11, 1, NULL)) AS 'Online-Asynchronous'",
+                "FROM (",
+                    "SELECT A.CourseID, A.Name, A.Number, A.Section, A.Students AS 'Enrollment', B.Type",
+                    $fromClause,
+                    "LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID",
+                    $whereJointClause,
+                    "GROUP BY A.CourseID, B.Type",
+                ") Prime ",
+                "ORDER BY Prime.Name",
+                "GROUP BY Prime.Name",
             ],
             "Options"=> [
                 'title'=>'ACRL Questions 71/73'
@@ -195,12 +173,16 @@ Total # of Students in Courses
 
 
 //Pie Chart : Total # of Courses, listed by Semester; if only one Semester, just say how many courses were there.
+//SELECT CONCAT(Prime.Semester, ' - ', Prime.Year) AS 'Semester', COUNT(Prime.CourseID) AS 'Courses' FROM (
+//) Prime GROUP BY Prime.Semester
 $graphArray[] = (count($_POST['semesterYear'])>1) ? [
     "Query"=>   [
-        "SELECT CONCAT(A.Semester, ' - ', A.Year) AS 'Semester', COUNT(A.CourseID) AS Courses",
+        "SELECT Prime.Semester, COUNT(Prime.CourseID) AS 'Courses'",
+        "FROM (SELECT CONCAT(A.Semester, ' - ', A.Year) AS 'Semester', A.CourseID",
         $fromClause,
         $whereJointClause,
-        "GROUP BY Semester"
+        "GROUP BY A.CourseID, CONCAT(A.Semester, ' - ', A.Year)) Prime",
+        "GROUP BY Prime.Semester"
     ],
     "Options"=> [
         'title' => 'Total # of Courses by Semester',
@@ -208,12 +190,14 @@ $graphArray[] = (count($_POST['semesterYear'])>1) ? [
     "Type" => 'TableChart'
 ] : [
     "Query"=>   [
-        "SELECT CONCAT(A.Semester, ' - ', A.Year) AS 'Semester', COUNT(A.CourseID) AS Courses",
+        "SELECT Prime.Semester, COUNT(Prime.CourseID) AS 'Courses'",
+        "FROM (SELECT CONCAT(A.Semester, ' - ', A.Year) AS 'Semester', A.CourseID",
         $fromClause,
         "LEFT JOIN ML_Public_Website.SemesterInfo B ON (A.Semester = B.Semester AND A.Year = YEAR(B.StartDate))",
         $whereJointClause,
-        "GROUP BY CONCAT(A.Semester, ' - ', A.Year)",
-        "ORDER BY B.StartDate, TRUE, B.EndDate, TRUE"
+        "GROUP BY A.CourseID, CONCAT(A.Semester, ' - ', A.Year)",
+        "ORDER BY B.StartDate, TRUE, B.EndDate, TRUE) Prime",
+        "GROUP BY Prime.Semester"
     ],
     "Options"=> [
         'title'=>'Total # of Courses Supported'
@@ -224,11 +208,17 @@ $graphArray[] = (count($_POST['semesterYear'])>1) ? [
 //Top 5 Activity Types Used (Total)
 $graphArray[] = [
     "Query"=> [
-        "SELECT COALESCE(C.Type, 'Total Activities'), COUNT(B.Type) AS 'Activity Type'",
-        $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID",
-        $whereJointClause,
-        "AND C.Type IS NOT NULL",
-        "GROUP BY C.Type",
+        "SELECT COALESCE(Prime.TypeName, 'Total Activities') AS 'Activity Type', COUNT(Prime.TypeNumber) AS 'Count'",
+        "FROM (",
+            "SELECT C.Type AS 'TypeName', B.Type AS 'TypeNumber' ",
+            $fromClause,
+            "LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID ",
+            "LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID",
+            $whereJointClause,
+            "AND C.Type IS NOT NULL",
+            "GROUP BY B.InteractionID",
+        ") Prime",
+        "GROUP BY Prime.TypeName",
         "WITH ROLLUP",
     ],
     "Options"=> [
@@ -270,9 +260,13 @@ $graphArray[] = [
 //# of Students Serviced
 $graphArray[] = [
     "Query"=> [
-        "SELECT SUM(Students) AS 'Total Number of Students Supported'",
-        $fromClause,
-        $whereJointClause
+        "SELECT SUM(Prime.Students) AS 'Total Number of Students Supported'",
+        "FROM (",
+            "SELECT A.Students",
+            $fromClause,
+            $whereJointClause,
+            "GROUP BY A.CourseID",
+        ") Prime"
     ],
     "Options"=> [
         'title'=>'Total # of Students Supported'
@@ -283,9 +277,12 @@ $graphArray[] = [
 //# of LibGuide Views.
 $graphArray[] = [
     "Query"=> [
-        "SELECT SUM(LibGuideUsage) AS 'Total Number of LibGuide Views for Attached LibGuides'",
+        "SELECT SUM(Prime.LibGuideUsage) AS 'Total Number of LibGuide Views for Attached LibGuides'",
+        "FROM (",
+        "SELECT A.LibGuideUsage",
         $fromClause,
-        $whereJointClause
+        $whereJointClause,
+        ") Prime"
     ],
     "Options"=> [
         'title'=>'Total # of LibGuide Views for Attached LibGuides'
@@ -296,10 +293,13 @@ $graphArray[] = [
 //- Assessment (Total for the period described)
 $graphArray[] = [
     "Query"=>   [
-        "SELECT C.AssessName as 'Assessment Type', COUNT(A.CourseID) AS 'Courses'",
-        $fromClause.' RIGHT JOIN ML_LRC.BridgeCourseAssessment B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.CourseAssessment C ON B.AssessID = C.AssessID',
-        $whereJointClause,
-        "GROUP BY C.AssessName",
+        "SELECT Prime.AssessName as 'Assessment Type', COUNT(Prime.CourseID) AS 'Courses'",
+        "FROM (",
+            "SELECT DISTINCT C.AssessName, A.CourseID",
+            $fromClause.' RIGHT JOIN ML_LRC.BridgeCourseAssessment B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.CourseAssessment C ON B.AssessID = C.AssessID',
+            $whereJointClause,
+        ") Prime",
+        "GROUP BY Prime.AssessName",
     ],
     "Options"=> [
         'title'=> 'Total # of Assessments Reported'
@@ -310,11 +310,14 @@ $graphArray[] = [
 // - Course Level and Format, with X Axis being the Course Level, the Colors being the Format Types.
 $graphArray[] = [
     "Query"=> [
-        "SELECT D.Name AS CourseLevel, SUM(if(A.Delivery = 'In-Person', 1, 0)) AS 'In-Person', SUM(if(A.Delivery = 'Hybrid', 1, 0)) AS 'Hybrid', SUM(IF(A.Delivery = 'Online', 1, 0)) AS 'Online'",
-        $fromClause." LEFT JOIN ML_LRC.BridgeCourseLevel C ON C.CourseID = A.CourseID LEFT JOIN ML_LRC.CourseLevel D ON C.LevelID = D.LevelID",
-        $whereJointClause,
-
-        "GROUP BY CourseLevel"
+        "SELECT Prime.Name AS CourseLevel, SUM(if(Prime.Delivery = 'In-Person', 1, 0)) AS 'In-Person', SUM(if(Prime.Delivery = 'Hybrid', 1, 0)) AS 'Hybrid', SUM(IF(Prime.Delivery = 'Online', 1, 0)) AS 'Online'",
+        "FROM (",
+            "SELECT DISTINCT A.CourseID, A.Delivery, D.Name",
+            $fromClause,
+            "LEFT JOIN ML_LRC.BridgeCourseLevel C ON C.CourseID = A.CourseID LEFT JOIN ML_LRC.CourseLevel D ON C.LevelID = D.LevelID",
+            $whereJointClause,
+        ") Prime",
+        "GROUP BY Prime.Name"
     ],
     "Options"=> [
         'title' => 'Total # of Courses by Delivery Method and Level',
@@ -326,10 +329,13 @@ $graphArray[] = [
 //Total # of Courses by Level
 $graphArray[] = [
     "Query"=> [
-        "SELECT D.Name AS CourseLevel, COUNT(D.Name) AS 'Courses'",
-        $fromClause." LEFT JOIN ML_LRC.BridgeCourseLevel C ON C.CourseID = A.CourseID LEFT JOIN ML_LRC.CourseLevel D ON C.LevelID = D.LevelID",
-        $whereJointClause,
-        "AND D.Name IS NOT NULL",
+        "SELECT Prime.Name AS 'CourseLevel', COUNT(Prime.Name) AS 'Courses'",
+        "FROM (",
+            "SELECT DISTINCT A.CourseID, D.Name",
+            $fromClause." LEFT JOIN ML_LRC.BridgeCourseLevel C ON C.CourseID = A.CourseID LEFT JOIN ML_LRC.CourseLevel D ON C.LevelID = D.LevelID",
+            $whereJointClause,
+            "AND D.Name IS NOT NULL",
+        ") Prime",
         "GROUP BY CourseLevel"
     ],
     "Options"=> [
@@ -341,9 +347,12 @@ $graphArray[] = [
 //Total # of Courses by Delivery Method
 $graphArray[] = [
     "Query"=> [
-        "SELECT A.Delivery, COUNT(A.Delivery) AS 'Total'",
-        $fromClause,
-        $whereJointClause,
+        "SELECT Prime.Delivery, COUNT(Prime.Delivery) AS 'Total'",
+        "From (",
+            "Select DISTINCT A.CourseID, A.Delivery",
+            $fromClause,
+            $whereJointClause,
+        ") Prime",
         "GROUP BY Delivery"
     ],
     "Options"=> [
@@ -378,11 +387,14 @@ $graphArray[] = [
 //Top 5 Research Skills Covered (Total)
 $graphArray[] = [
     "Query"=> [
-        "SELECT D.Name, COUNT(C.ActivityID) AS Interactions",
+        "SELECT Prime.Name, COUNT(Prime.ActivityID) AS 'Interactions'",
+        "FROM (",
+        "SELECT DISTINCT C.InteractionID, D.Name, C.ActivityID",
         $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID LEFT JOIN ML_LRC.Activities D ON C.ActivityID = D.ActivityID",
         $whereJointClause,
-        "GROUP BY D.Name",
-        "ORDER BY Count(C.ActivityID) DESC",
+        ") Prime",
+        "GROUP BY Prime.Name",
+        "ORDER BY Count(Prime.ActivityID) DESC",
         "LIMIT 5"
     ],
     "Options"=> [
@@ -391,14 +403,17 @@ $graphArray[] = [
     "Type" => "TableChart"
 ];
 
-//Top 5 Research Skills Covered (Downloadable)
+//Top Research Skills Covered (Downloadable)
 $graphArray[] = [
     "Query"=> [
-        "SELECT D.Name, COUNT(C.ActivityID) AS Interactions",
+        "SELECT Prime.Name, COUNT(Prime.ActivityID) AS 'Interactions'",
+        "FROM (",
+        "SELECT DISTINCT C.InteractionID, D.Name, C.ActivityID",
         $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID LEFT JOIN ML_LRC.Activities D ON C.ActivityID = D.ActivityID",
         $whereJointClause,
-        "GROUP BY D.Name",
-        "ORDER BY Count(C.ActivityID) DESC",
+        ") Prime",
+        "GROUP BY Prime.Name",
+        "ORDER BY Count(Prime.ActivityID) DESC"
     ],
     "Options"=> [
         'title'=>'Research Skills Covered (Total)'
@@ -411,20 +426,23 @@ $graphArray[] = [
 //Because of the current query, this may include duplicate information. A notice informs the user.
 $coalesce = [];
 foreach($libraryDB->query("SELECT A.Type FROM ML_LRC.InteractionType A") as $type){
-    $coalesce[] = "coalesce(sum(case when B2.Type = '".$type['Type']."' then 1 end), 0) '".$type['Type']."'";
+    $coalesce[] = "coalesce(sum(case when Prime.Type = '".$type['Type']."' then 1 end), 0) '".$type['Type']."'";
 }
 
 $graphArray[] = [
     "Query"=> [
-        "SELECT C2.Name AS 'Program',",
+        "SELECT Prime.Name AS 'Program',",
         implode(", ", $coalesce),
-        $fromClause,
-        "RIGHT JOIN ML_LRC.Interaction B1 ON A.CourseID = B1.CourseID", 
-        "LEFT JOIN ML_LRC.InteractionType B2 ON B1.Type = B2.TypeID", 
-        "RIGHT JOIN ML_LRC.BridgeCourseProgram C1 ON A.CourseID = C1.CourseID",
-        "LEFT JOIN ML_Public_Website.Programs C2 ON C1.ProgramID = C2.ProgramID",
-        $whereJointClause,
-        "GROUP BY C2.Name",
+        "FROM (",
+            "SELECT DISTINCT B1.InteractionID, C2.Name, B2.Type",
+            $fromClause,
+            "RIGHT JOIN ML_LRC.Interaction B1 ON A.CourseID = B1.CourseID", 
+            "LEFT JOIN ML_LRC.InteractionType B2 ON B1.Type = B2.TypeID", 
+            "RIGHT JOIN ML_LRC.BridgeCourseProgram C1 ON A.CourseID = C1.CourseID",
+            "LEFT JOIN ML_Public_Website.Programs C2 ON C1.ProgramID = C2.ProgramID",
+            $whereJointClause,
+        ") Prime",
+        "GROUP BY Prime.Name",
     ],
     "Options"=> [
         'title'=>'Total # of Interaction Types by Program',
@@ -436,11 +454,14 @@ $graphArray[] = [
 //Top 5 Types of Course Support Provided (Total)
 $graphArray[] = [
     "Query"=> [
-        "SELECT C.Name, COUNT(B.ActivityID) AS 'Course Support'",
-        $fromClause." LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.Activities C ON B.ActivityID = C.ActivityID",
-        $whereJointClause,
-        "GROUP BY C.Name",
-        "ORDER BY Count(B.ActivityID) DESC",
+        "SELECT Prime.Name, COUNT(Prime.ActivityID) AS 'Course Support'",
+        "FROM (",
+            "SELECT DISTINCT A.CourseID, C.Name, B.ActivityID",
+            $fromClause." LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.Activities C ON B.ActivityID = C.ActivityID",
+            $whereJointClause,
+        ") Prime",
+        "GROUP BY Prime.Name",
+        "ORDER BY Count(Prime.ActivityID) DESC",
         "LIMIT 5"
     ],
     "Options"=> [
@@ -452,11 +473,14 @@ $graphArray[] = [
 //Top Types of Course Support (downloadable)
 $graphArray[] = [
     "Query"=> [
-        "SELECT C.Name, COUNT(B.ActivityID) AS 'Course Support'",
-        $fromClause." LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.Activities C ON B.ActivityID = C.ActivityID",
-        $whereJointClause,
-        "GROUP BY C.Name",
-        "ORDER BY Count(B.ActivityID) DESC",
+        "SELECT Prime.Name, COUNT(Prime.ActivityID) AS 'Course Support'",
+        "FROM (",
+            "SELECT DISTINCT A.CourseID, C.Name, B.ActivityID",
+            $fromClause." LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.Activities C ON B.ActivityID = C.ActivityID",
+            $whereJointClause,
+        ") Prime",
+        "GROUP BY Prime.Name",
+        "ORDER BY Count(Prime.ActivityID) DESC",
     ],
 
     "Options"=> [
@@ -468,11 +492,14 @@ $graphArray[] = [
 //Top 5 Activity Types Used (Total)
 $graphArray[] = [
     "Query"=> [
-        "SELECT C.Type, COUNT(B.Type) AS 'Activity Type'",
-        $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID",
-        $whereJointClause,
-        "GROUP BY C.Type",
-        "ORDER BY Count(B.Type) DESC",
+        "SELECT Prime.TypeName AS 'Activity Type', COUNT(Prime.Type) AS 'Amount'",
+        "FROM (",
+            "SELECT DISTINCT B.InteractionID, C.Type AS 'TypeName', B.Type",
+            $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID",
+            $whereJointClause,
+        ") Prime",
+        "GROUP BY Prime.TypeName",
+        "ORDER BY Count(Prime.Type) DESC",
         "LIMIT 5"
     ],
     "Options"=> [
@@ -482,10 +509,11 @@ $graphArray[] = [
 ];
 
 //Top 5 Types of Course Support By Semester
-$courseSupportSemSelect = "SELECT CONCAT(A.Semester, ' - ', A.Year) AS Semester";
+$courseSupportSemSelect = "SELECT CONCAT(Prime.Sem, ' - ', Prime.Year) AS Semester";
 $courseSupportSemSelectPrep = [
-    "SELECT DISTINCT C.Name, C.ActivityID",
-    $fromClause." LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.Activities C ON B.ActivityID = C.ActivityID",
+    "SELECT DISTINCT A.CourseID, C.Name, C.ActivityID",
+    $fromClause." LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID", 
+    "LEFT JOIN ML_LRC.Activities C ON B.ActivityID = C.ActivityID",
     $whereJointClause,
     "GROUP BY C.Name",
     "ORDER BY Count(B.ActivityID) DESC",
@@ -493,14 +521,17 @@ $courseSupportSemSelectPrep = [
 ];
 
 foreach($libraryDB->query(implode(" ", $courseSupportSemSelectPrep), PDO::FETCH_ASSOC) as $result){
-    $courseSupportSemSelect .= ", SUM(if(B.ActivityID = '".$result['ActivityID']."', 1, 0)) AS '".$result['Name']."'";
+    $courseSupportSemSelect .= ", SUM(if(Prime.ActivityID = '".$result['ActivityID']."', 1, 0)) AS '".$result['Name']."'";
 }
 
 $graphArray[] = [
     "Query"=> [
         $courseSupportSemSelect,
+        "From (",
+        "SELECT DISTINCT A.CourseID, A.Semester AS 'Sem', A.Year, B.ActivityID",
         $fromClause." LEFT JOIN ML_LRC.BridgeActivitiesCourses B ON A.CourseID = B.CourseID",
         $whereJointClause,
+        ") Prime",
         "GROUP BY Semester"
     ],
     "Options"=> [
@@ -512,24 +543,30 @@ $graphArray[] = [
 
 
 if(count($dateArray)<13){
-    //Top 5 Activity Types Used (by Month)
+    //Top 5 Activity Types Used for the whole period.
     $activityTypePrep = [
-        "SELECT C.Type, C.TypeID",
-        $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID",
+        "SELECT DISTINCT B.InteractionID, C.Type, C.TypeID",
+        $fromClause,
+        "LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID", 
+        "LEFT JOIN ML_LRC.InteractionType C ON B.Type = C.TypeID",
         $whereJointClause,
         "GROUP BY C.Type",
         "ORDER BY Count(B.Type) DESC",
         "LIMIT 5"
     ];
     foreach($libraryDB->query(implode(" ", $activityTypePrep), PDO::FETCH_ASSOC) as $result){
-        $activityTypeMonSelect .= ", IFNULL(SUM(if(B.Type = '".$result['TypeID']."', 1, 0)), 0) AS '".$result['Type']."'";
+        $activityTypeMonSelect[] = "IFNULL(SUM(if(Prime.Type = '".$result['TypeID']."', 1, 0)), 0) AS '".$result['Type']."'";
     }
     $monthArray = array();
     foreach($dateArray as $date){
         $queryArray = [
-            "SELECT '".$date."' ".$activityTypeMonSelect,
-            $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID",
-            "WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '".$date."'"
+            "SELECT '".$date."',".implode(",", $activityTypeMonSelect),
+            "FROM (",
+                "SELECT DISTINCT B.InteractionID, B.Type",
+                $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID",
+                $whereJointClause,
+                "AND CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '".$date."'",
+            ") Prime"
         ];
         if(!isset($union)){$union = '';}else{$union = 'UNION ALL';}
         $monthArray[] = $union;
@@ -546,23 +583,33 @@ if(count($dateArray)<13){
 
     //Top 5 Research Skills (by Month)
     $researchSkillPrep = [
-        "SELECT D.Name, C.ActivityID",
-        $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID LEFT JOIN ML_LRC.Activities D ON C.ActivityID = D.ActivityID",
-        $whereJointClause,
-        "GROUP BY D.Name",
-        "ORDER BY Count(C.ActivityID) DESC",
+        "SELECT Prime.Name, Prime.ActivityID",
+        "FROM (",
+        "SELECT DISTINCT B.InteractionID, D.Name, C.ActivityID",
+            $fromClause,
+            "LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID",
+            "LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID", 
+            "LEFT JOIN ML_LRC.Activities D ON C.ActivityID = D.ActivityID",
+            $whereJointClause,
+        ") Prime",
+        "GROUP BY Prime.Name",
+        "ORDER BY Count(Prime.ActivityID) DESC",
         "LIMIT 5"
     ];
     foreach($libraryDB->query(implode(" ", $researchSkillPrep), PDO::FETCH_ASSOC) as $result){
-        $researchSkillMonSelect .= ", IFNULL(SUM(if(C.ActivityID = '".$result['ActivityID']."', 1, 0)), 0) AS '".$result['Name']."'";
+        $researchSkillMonSelect[] = "IFNULL(SUM(if(Prime.ActivityID = '".$result['ActivityID']."', 1, 0)), 0) AS '".$result['Name']."'";
     }
 
     $monthArray = array();
     foreach($dateArray as $date){
         $queryArray = [
-            "SELECT '".$date."' ".$researchSkillMonSelect,
-            $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID",
-            "WHERE CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '".$date."'"
+            "SELECT '".$date."',".implode(",", $researchSkillMonSelect),
+            "FROM (",
+                "SELECT DISTINCT B.InteractionID, C.ActivityID",
+                $fromClause." LEFT JOIN ML_LRC.Interaction B ON A.CourseID = B.CourseID LEFT JOIN ML_LRC.BridgeActivitiesInteraction C ON B.InteractionID = C.InteractionID",
+                $whereJointClause,
+                "AND CONCAT(YEAR(B.InteractionDate), '-', MONTH(B.InteractionDate)) = '".$date."'",
+            ") Prime"
         ];
         if(!isset($union2)){$union2 = '';}else{$union2 = 'UNION ALL';}
         $monthArray[] = $union2;
@@ -588,5 +635,5 @@ if(count($dateArray)<13){
 ?>
 <?php //Echo Output and end the IF Statement.
         echo json_encode($output, JSON_NUMERIC_CHECK);
-    }
+   }
 ?>
