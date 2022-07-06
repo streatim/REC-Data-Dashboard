@@ -3,8 +3,7 @@
 $leadershipArray = [
     'streatim', 
     'parmatis', 
-    'hvs', 
+    'hvs',
     'cspilker',
-    'hkeppen'
 ];
 ?>
